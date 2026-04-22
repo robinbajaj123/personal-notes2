@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\\|yellow\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/mailflow
+      - MAILFLOW_ENCRYPTION_KEY=${MAILFLOW_ENCRYPTION_KEY:-changeme-32-char-key-here-padded}
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+
+volumes:
+  es_data:
+  mongo_data:
+
+# Ollama runs NATIVELY on macOS — Docker loses Metal GPU.
+# Install: brew install ollama
+# Run:     ollama serve
+# Models:  ollama pull llama3.1:8b && ollama pull qwen2.5:14b

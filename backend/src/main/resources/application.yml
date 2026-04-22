@@ -1,0 +1,35 @@
+spring:
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/mailflow}
+    elasticsearch:
+      repositories:
+        enabled: true
+  elasticsearch:
+    uris: ${SPRING_ELASTICSEARCH_URIS:http://localhost:9200}
+
+server:
+  port: 8080
+
+ollama:
+  base-url: ${OLLAMA_BASE_URL:http://host.docker.internal:11434}
+  autocomplete-model: llama3.1:8b
+  draft-model: qwen2.5:14b
+  autocomplete-max-tokens: 40
+  draft-max-tokens: 300
+  temperature: 0.3
+
+mailflow:
+  encryption-key: ${MAILFLOW_ENCRYPTION_KEY:changeme-32-char-key-here-padded}
+  imap-poll-interval-ms: 60000
+  apns:
+    key-file: ${APNS_KEY_FILE:}
+    key-id: ${APNS_KEY_ID:}
+    team-id: ${APNS_TEAM_ID:}
+    bundle-id: ${APNS_BUNDLE_ID:com.mailflow.app}
+    production: false
+
+logging:
+  level:
+    com.mailflow: DEBUG
+    org.springframework.data.elasticsearch: INFO
